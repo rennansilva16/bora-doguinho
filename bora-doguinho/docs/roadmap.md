@@ -3,8 +3,8 @@
 ## 🏗️ Desenvolvimento
 
 - [ ] **FASE 1 — Fundação e Home**
-  - [ ] 1.1 Organização
-  - [ ] 1.2 Navegação principal
+  - [x] 1.1 Organização
+  - [x] 1.2 Navegação principal
   - [ ] 1.3 Menu lateral
   - [ ] 1.4 Estrutura visual da Home
   - [ ] 1.5 Estados da Home
