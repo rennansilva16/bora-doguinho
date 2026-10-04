@@ -1,0 +1,78 @@
+# 🐶 Bora, Doguinho! — Roadmap do MVP
+
+## 🏗️ Desenvolvimento
+
+- [ ] **FASE 1 — Fundação e Home**
+  - [ ] 1.1 Organização
+  - [ ] 1.2 Navegação principal
+  - [ ] 1.3 Menu lateral
+  - [ ] 1.4 Estrutura visual da Home
+  - [ ] 1.5 Estados da Home
+  - [ ] 1.6 Modal BORA DOGUINHO
+  - [ ] 1.7 Revisão da Fase 1
+
+- [ ] **FASE 2 — Firebase + Autenticação**
+  - [ ] 2.1 Configuração Firebase
+  - [ ] 2.2 Modelo de usuário
+  - [ ] 2.3 Cadastro
+  - [ ] 2.4 Login e sessão
+  - [ ] 2.5 Recuperação de senha
+  - [ ] 2.6 Teste com duas contas
+
+- [ ] **FASE 3 — Pets**
+  - [ ] 3.1 Catálogo
+  - [ ] 3.2 Storage
+  - [ ] 3.3 Pets do usuário
+  - [ ] 3.4 Tela de Pets
+  - [ ] 3.5 Aleatório
+  - [ ] 3.6 Integração com Home
+  - [ ] 3.7 Testes
+
+- [ ] **FASE 4 — Conexão**
+  - [ ] 4.1 Modelo
+  - [ ] 4.2 Convite
+  - [ ] 4.3 Busca por ID
+  - [ ] 4.4 Envio
+  - [ ] 4.5 Recebimento
+  - [ ] 4.6 Aceitar
+  - [ ] 4.7 Recusar
+  - [ ] 4.8 Convites simultâneos
+  - [ ] 4.9 Desconectar
+  - [ ] 4.10 Segurança
+  - [ ] 4.11 Teste com duas contas
+
+- [ ] **FASE 5 — BORA DOGUINHO**
+- [ ] **FASE 6 — Push Notifications**
+- [ ] **FASE 7 — Central de Notificações**
+- [ ] **FASE 8 — Indicador Semanal**
+- [ ] **FASE 9 — Perfil e Configurações**
+- [ ] **FASE 10 — Roupas + Loja**
+- [ ] **FASE 11 — Segurança + Revisão Técnica**
+- [ ] **FASE 12 — Teste Final do MVP**
+
+---
+
+### 📊 Progresso
+
+**0 / 12 fases concluídas**
+
+`░░░░░░░░░░░░░░░░░░░░ 0%`
+
+### 🎯 Fase atual
+
+**FASE 1 — Fundação e Home**
+
+**Próxima tarefa:** `1.1 — Organização`
+
+### 🏁 Marco do projeto
+
+- [ ] Fundação concluída
+- [ ] Autenticação funcionando
+- [ ] Dois usuários conseguem se conectar
+- [ ] BORA DOGUINHO funcionando
+- [ ] Push funcionando
+- [ ] Central de notificações funcionando
+- [ ] Indicador semanal funcionando
+- [ ] Segurança revisada
+- [ ] Teste final aprovado
+- [ ] **🎉 MVP concluído**
