@@ -1,0 +1,54 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    match /users/{userId} {
+      // Phase 2 creates the profile in the same batch as the initial pets.
+      // Only the authenticated owner can create and read their own profile.
+      allow create: if isOwner(userId)
+        && request.resource.data.keys().hasOnly([
+          'id', 'name', 'email', 'avatarURL', 'activePetId',
+          'petSelectionMode', 'connectedUserId', 'createdAt'
+        ])
+        && request.resource.data.keys().hasAll([
+          'id', 'name', 'email', 'avatarURL', 'activePetId',
+          'petSelectionMode', 'connectedUserId', 'createdAt'
+        ])
+        && request.resource.data.id == userId
+        && request.resource.data.name is string
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.avatarURL is string
+        && request.resource.data.activePetId == 'harry'
+        && request.resource.data.petSelectionMode == 'specific'
+        && request.resource.data.connectedUserId == null
+        && request.resource.data.createdAt is timestamp;
+
+      allow read: if isOwner(userId);
+
+      // Profile editing and connections have dedicated validation rules in
+      // later phases; do not leave broad updates enabled in production.
+      allow update, delete: if false;
+
+      match /pets/{petId} {
+        allow create: if isOwner(userId)
+          && (petId == 'harry' || petId == 'pandora')
+          && request.resource.data.keys().hasOnly(['id', 'name', 'createdAt'])
+          && request.resource.data.keys().hasAll(['id', 'name', 'createdAt'])
+          && request.resource.data.id == petId
+          && request.resource.data.name == (petId == 'harry' ? 'Harry' : 'Pandora')
+          && request.resource.data.createdAt is timestamp;
+
+        allow read: if isOwner(userId);
+        allow update, delete: if false;
+      }
+    }
+  }
+}

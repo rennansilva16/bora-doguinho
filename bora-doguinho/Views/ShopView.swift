@@ -2,7 +2,11 @@ import SwiftUI
 
 struct ShopView: View {
     var body: some View {
-        Text("Loja")
+        ContentUnavailableView {
+            Label("A lojinha está chegando!", systemImage: "bag")
+        } description: {
+            Text("Ainda não há compras, moedas ou inventário no MVP.")
+        }
     }
 }
 

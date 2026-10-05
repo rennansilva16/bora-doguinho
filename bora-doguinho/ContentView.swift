@@ -1,7 +1,26 @@
 import SwiftUI
 
 struct ContentView: View {
+    @EnvironmentObject private var session: AuthSessionStore
+
     var body: some View {
+        Group {
+            if session.isLoading {
+                ProgressView("Carregando…")
+            } else if let setupError = session.setupError {
+                FirebaseSetupRequiredView(message: setupError)
+            } else if session.currentUser == nil {
+                AuthFlowView()
+            } else {
+                mainTabs
+            }
+        }
+        .task {
+            session.start()
+        }
+    }
+
+    private var mainTabs: some View {
         TabView {
             NavigationStack {
                 HomeView()
@@ -29,5 +48,7 @@ struct ContentView: View {
 }
 
 #Preview {
+    @Previewable @StateObject var session = AuthSessionStore()
     ContentView()
+        .environmentObject(session)
 }

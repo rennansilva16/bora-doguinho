@@ -1,7 +1,41 @@
 import SwiftUI
 
+enum HomeVisualState {
+    case noConnection
+    case available
+    case delivering
+    case returning
+    case received
+    case expired
+
+    var message: String {
+        switch self {
+        case .noConnection:
+            return "🔗 Conecte-se ao seu parceiro para começar."
+        case .available:
+            return "🐶 Seu doguinho está pronto para levar um convite!"
+        case .delivering:
+            return "🐶 Estou levando sua solicitação!"
+        case .returning:
+            return "🐶 Voltei! ❤️"
+        case .received:
+            return "🐶 Você recebeu uma solicitação!"
+        case .expired:
+            return "🥺 A mensagem não foi respondida. Tente solicitar novamente."
+        }
+    }
+
+    var isConnected: Bool { self != .noConnection }
+}
+
 struct HomeView: View {
     @State private var isShowingMenu = false
+    @State private var visualState: HomeVisualState
+    @State private var isShowingRequestModal = false
+
+    init(visualState: HomeVisualState = .available) {
+        _visualState = State(initialValue: visualState)
+    }
 
     var body: some View {
         HStack(spacing: 0) {
@@ -9,7 +43,7 @@ struct HomeView: View {
             // Side menu
             if isShowingMenu {
                 SideMenuView(isShowing: $isShowingMenu)
-                    .frame(width: 240)
+                    .frame(width: 200)
                     .shadow(radius: 4)
             }
 
@@ -31,13 +65,15 @@ struct HomeView: View {
 
                     // Casal
                     HStack(spacing: 8) {
+                        avatar(initials: "L", color: .pink)
                         Text("Laura")
                             .font(.headline)
 
-                        Image(systemName: "lock.fill")
+                        Image(systemName: "link")
                             .font(.caption)
                             .foregroundStyle(.secondary)
 
+                        avatar(initials: "R", color: .purple)
                         Text("Rennan")
                             .font(.headline)
                     }
@@ -83,10 +119,29 @@ struct HomeView: View {
                     .resizable()
                     .scaledToFit()
                     .frame(height: 280)
+                    .opacity(visualState == .noConnection ? 0.45 : 1)
+
+                Text(visualState.message)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 32)
+                    .padding(.top, 8)
+
+                if visualState == .received {
+                    Button("Responder ao convite") {
+                        isShowingRequestModal = true
+                    }
+                    .buttonStyle(.bordered)
+                    .padding(.top, 8)
+                }
 
                 // Botão principal
                 Button {
-                    // Ação será implementada na Fase 5.
+                    // Phase 1 visual-only state; Phase 5 creates the real request.
+                    if visualState == .available {
+                        visualState = .delivering
+                    }
                 } label: {
                     Text("BORA DOGUINHO?")
                         .font(.headline)
@@ -98,6 +153,8 @@ struct HomeView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 16))
                 }
                 .padding(.horizontal, 32)
+                .disabled(!visualState.isConnected || visualState == .delivering || visualState == .received)
+                .opacity((!visualState.isConnected || visualState == .delivering || visualState == .received) ? 0.55 : 1)
 
                 Spacer()
             }
@@ -108,11 +165,69 @@ struct HomeView: View {
             .padding(.top, 8)
         }
         .animation(.easeInOut(duration: 0.25), value: isShowingMenu)
+        .sheet(isPresented: $isShowingRequestModal) {
+            DoguinhoRequestModal { _ in
+                // Phase 1: all visual responses return the doguinho locally.
+                visualState = .returning
+                isShowingRequestModal = false
+            }
+        }
+    }
+
+    private func avatar(initials: String, color: Color) -> some View {
+        Text(initials)
+            .font(.caption.bold())
+            .foregroundStyle(.white)
+            .frame(width: 24, height: 24)
+            .background(color)
+            .clipShape(Circle())
     }
 }
 
 #Preview {
+    @Previewable @StateObject var session = AuthSessionStore()
     NavigationStack {
         HomeView()
     }
+    .environmentObject(session)
+}
+
+#Preview("Home sem conexão") {
+    @Previewable @StateObject var session = AuthSessionStore()
+    NavigationStack {
+        HomeView(visualState: .noConnection)
+    }
+    .environmentObject(session)
+}
+
+#Preview("Home pedido recebido") {
+    @Previewable @StateObject var session = AuthSessionStore()
+    NavigationStack {
+        HomeView(visualState: .received)
+    }
+    .environmentObject(session)
+}
+
+#Preview("Home levando solicitação") {
+    @Previewable @StateObject var session = AuthSessionStore()
+    NavigationStack {
+        HomeView(visualState: .delivering)
+    }
+    .environmentObject(session)
+}
+
+#Preview("Home retornando") {
+    @Previewable @StateObject var session = AuthSessionStore()
+    NavigationStack {
+        HomeView(visualState: .returning)
+    }
+    .environmentObject(session)
+}
+
+#Preview("Home pedido expirado") {
+    @Previewable @StateObject var session = AuthSessionStore()
+    NavigationStack {
+        HomeView(visualState: .expired)
+    }
+    .environmentObject(session)
 }

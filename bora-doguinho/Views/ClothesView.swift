@@ -2,7 +2,11 @@ import SwiftUI
 
 struct ClothesView: View {
     var body: some View {
-        Text("Roupas")
+        ContentUnavailableView {
+            Label("Roupinhas em breve!", systemImage: "tshirt")
+        } description: {
+            Text("Em breve os doguinhos poderão usar novos looks.")
+        }
     }
 }
 

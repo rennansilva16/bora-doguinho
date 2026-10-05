@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SideMenuView: View {
     @Binding var isShowing: Bool
+    @EnvironmentObject private var session: AuthSessionStore
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -42,7 +43,8 @@ struct SideMenuView: View {
             Spacer()
 
             Button {
-                // Logout será implementado posteriormente.
+                session.signOut()
+                isShowing = false
             } label: {
                 Label(
                     "Sair",
@@ -67,6 +69,8 @@ struct SideMenuView: View {
 }
 
 #Preview {
+    @Previewable @StateObject var session = AuthSessionStore()
     SideMenuView(isShowing: .constant(true))
         .frame(width: 240)
+        .environmentObject(session)
 }

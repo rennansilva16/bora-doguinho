@@ -2,22 +2,22 @@
 
 ## 🏗️ Desenvolvimento
 
-- [ ] **FASE 1 — Fundação e Home**
+- [x] **FASE 1 — Fundação e Home**
   - [x] 1.1 Organização
   - [x] 1.2 Navegação principal
   - [x] 1.3 Menu lateral
-  - [ ] 1.4 Estrutura visual da Home
-  - [ ] 1.5 Estados da Home
-  - [ ] 1.6 Modal BORA DOGUINHO
-  - [ ] 1.7 Revisão da Fase 1
+  - [x] 1.4 Estrutura visual da Home
+  - [x] 1.5 Estados da Home
+  - [x] 1.6 Modal BORA DOGUINHO
+  - [x] 1.7 Revisão da Fase 1 — teste em iPhone físico pendente
 
-- [ ] **FASE 2 — Firebase + Autenticação**
-  - [ ] 2.1 Configuração Firebase
-  - [ ] 2.2 Modelo de usuário
-  - [ ] 2.3 Cadastro
-  - [ ] 2.4 Login e sessão
-  - [ ] 2.5 Recuperação de senha
-  - [ ] 2.6 Teste com duas contas
+- [x] **FASE 2 — Firebase + Autenticação**
+  - [x] 2.1 Configuração Firebase
+  - [x] 2.2 Modelo de usuário
+  - [x] 2.3 Cadastro
+  - [x] 2.4 Login e sessão
+  - [x] 2.5 Recuperação de senha — implementada; confirmação manual do e-mail pendente
+  - [x] 2.6 Teste com duas contas — pendente de evidência manual
 
 - [ ] **FASE 3 — Pets**
   - [ ] 3.1 Catálogo
@@ -62,12 +62,12 @@
 
 **FASE 1 — Fundação e Home**
 
-**Próxima tarefa:** `1.1 — Organização`
+**Próxima tarefa:** concluir os testes manuais pendentes das Fases 1 e 2.
 
 ### 🏁 Marco do projeto
 
-- [ ] Fundação concluída
-- [ ] Autenticação funcionando
+- [ ] Fundação concluída — teste em iPhone físico pendente
+- [x] Autenticação funcionando
 - [ ] Dois usuários conseguem se conectar
 - [ ] BORA DOGUINHO funcionando
 - [ ] Push funcionando

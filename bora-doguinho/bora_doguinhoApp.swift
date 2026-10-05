@@ -9,9 +9,12 @@ import SwiftUI
 
 @main
 struct bora_doguinhoApp: App {
+    @StateObject private var session = AuthSessionStore()
+
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(session)
         }
     }
 }
