@@ -91,7 +91,7 @@ Campos:
 Após o cadastro:
 
 1. conta é criada;
-2. usuário recebe automaticamente Harry e Pandora;
+2. usuário recebe automaticamente Harry, Pandora e Merlim;
 3. usuário entra no aplicativo;
 4. usuário ainda não possui conexão.
 
@@ -260,6 +260,7 @@ Todo usuário começa automaticamente com:
 
 - Harry;
 - Pandora.
+- Merlim
 
 Cada conta possui sua própria coleção de pets.
 
@@ -277,6 +278,7 @@ Exemplo:
 pets/
     harry
     pandora
+    merlim
 ```
 
 Documento:
@@ -323,6 +325,7 @@ O usuário pode:
 
 - escolher Harry;
 - escolher Pandora;
+- escolher Merlim
 - escolher Aleatório.
 
 O pet escolhido será utilizado no próximo pedido.

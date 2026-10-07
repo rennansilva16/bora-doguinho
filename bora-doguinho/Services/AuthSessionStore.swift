@@ -96,6 +96,14 @@ final class AuthSessionStore: ObservableObject {
             return false
         }
     }
+    
+    func updatePetSelection(activePetId: String, mode: PetSelectionMode) {
+        guard var user = currentUser else { return }
+
+        user.activePetId = activePetId
+        user.petSelectionMode = mode
+        currentUser = user
+    }
 
     func signOut() {
         do {

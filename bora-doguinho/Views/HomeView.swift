@@ -1,4 +1,31 @@
 import SwiftUI
+import Combine
+
+@MainActor
+final class HomeViewModel: ObservableObject {
+    @Published var activePetImageName: String?
+    
+    private let petService = PetService()
+    
+    func loadActivePet(for user: AppUser) async {
+        do {
+            let userPets = try await petService.fetchUserPets(userId: user.id)
+            let catalog = try await petService.fetchCatalog()
+            
+            var chosenPetId = user.activePetId
+            
+            if user.petSelectionMode == .random, !userPets.isEmpty {
+                chosenPetId = userPets.randomElement()?.id ?? "harry"
+            }
+            
+            if let catalogItem = catalog.first(where: { $0.id == chosenPetId }) {
+                self.activePetImageName = catalogItem.imageName
+            }
+        } catch {
+            print("Erro ao carregar pet ativo: \(error.localizedDescription)")
+        }
+    }
+}
 
 enum HomeVisualState {
     case noConnection
@@ -29,6 +56,8 @@ enum HomeVisualState {
 }
 
 struct HomeView: View {
+    @EnvironmentObject var session: AuthSessionStore
+    @StateObject private var viewModel = HomeViewModel()
     @State private var isShowingMenu = false
     @State private var visualState: HomeVisualState
     @State private var isShowingRequestModal = false
@@ -115,11 +144,20 @@ struct HomeView: View {
                 Spacer()
 
                 // Doguinho
-                Image("harry")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(height: 280)
-                    .opacity(visualState == .noConnection ? 0.45 : 1)
+                if let imageName = viewModel.activePetImageName {
+                    Image(imageName)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(height: 280)
+                        .opacity(visualState == .noConnection ? 0.45 : 1)
+                } else {
+                    // Fallback visual enquanto carrega ou se houver erro
+                    Image("harry")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(height: 280)
+                        .opacity(visualState == .noConnection ? 0.45 : 1)
+                }
 
                 Text(visualState.message)
                     .font(.subheadline)
@@ -167,9 +205,22 @@ struct HomeView: View {
         .animation(.easeInOut(duration: 0.25), value: isShowingMenu)
         .sheet(isPresented: $isShowingRequestModal) {
             DoguinhoRequestModal { _ in
-                // Phase 1: all visual responses return the doguinho locally.
                 visualState = .returning
                 isShowingRequestModal = false
+            }
+        }
+        .onAppear {
+            if let user = session.currentUser {
+                Task {
+                    await viewModel.loadActivePet(for: user)
+                }
+            }
+        }
+        .onChange(of: session.currentUser) { _, newValue in
+            if let user = newValue {
+                Task {
+                    await viewModel.loadActivePet(for: user)
+                }
             }
         }
     }

@@ -10,6 +10,11 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
+    match /pets/{petId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
     match /users/{userId} {
       // Phase 2 creates the profile in the same batch as the initial pets.
       // Only the authenticated owner can create and read their own profile.
@@ -33,17 +38,20 @@ service cloud.firestore {
 
       allow read: if isOwner(userId);
 
-      // Profile editing and connections have dedicated validation rules in
-      // later phases; do not leave broad updates enabled in production.
-      allow update, delete: if false;
+      allow update: if isOwner(userId)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['activePetId', 'petSelectionMode'])
+        && request.resource.data.petSelectionMode in ['specific', 'random']
+        && request.resource.data.activePetId is string;
+
+      allow delete: if false;
 
       match /pets/{petId} {
         allow create: if isOwner(userId)
-          && (petId == 'harry' || petId == 'pandora')
+          && (petId == 'harry' || petId == 'pandora' || petId == 'merlim')
           && request.resource.data.keys().hasOnly(['id', 'name', 'createdAt'])
           && request.resource.data.keys().hasAll(['id', 'name', 'createdAt'])
           && request.resource.data.id == petId
-          && request.resource.data.name == (petId == 'harry' ? 'Harry' : 'Pandora')
+          && request.resource.data.name == (petId == 'harry' ? 'Harry' : (petId == 'pandora' ? 'Pandora' : 'Merlim'))
           && request.resource.data.createdAt is timestamp;
 
         allow read: if isOwner(userId);

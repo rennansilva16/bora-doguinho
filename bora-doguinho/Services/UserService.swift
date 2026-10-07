@@ -39,7 +39,7 @@ final class UserService {
             "createdAt": user.createdAt
         ], forDocument: userReference)
 
-        for pet in ["harry": "Harry", "pandora": "Pandora"] {
+        for pet in ["harry": "Harry", "pandora": "Pandora", "merlim": "Merlim"] {
             batch.setData([
                 "id": pet.key,
                 "name": pet.value,

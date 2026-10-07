@@ -20,13 +20,13 @@
   - [x] 2.6 Teste com duas contas — pendente de evidência manual
 
 - [ ] **FASE 3 — Pets**
-  - [ ] 3.1 Catálogo
-  - [ ] 3.2 Storage
-  - [ ] 3.3 Pets do usuário
-  - [ ] 3.4 Tela de Pets
-  - [ ] 3.5 Aleatório
-  - [ ] 3.6 Integração com Home
-  - [ ] 3.7 Testes
+  - [x] 3.1 Catálogo
+  - [x] 3.2 Storage
+  - [x] 3.3 Pets do usuário
+  - [x] 3.4 Tela de Pets
+  - [x] 3.5 Aleatório
+  - [x] 3.6 Integração com Home
+  - [x] 3.7 Testes
 
 - [ ] **FASE 4 — Conexão**
   - [ ] 4.1 Modelo

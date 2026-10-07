@@ -227,6 +227,7 @@ Criar catálogo no Firestore:
 pets/
 ├── harry
 └── pandora
+|__ marlim
 ```
 
 ### 3.2 — Firebase Storage
@@ -244,6 +245,7 @@ Ao criar a conta:
 ```text
 Harry
 Pandora
+Merlim
 ```
 
 devem ser disponibilizados automaticamente.
@@ -272,6 +274,7 @@ Verificar:
 
 - Harry;
 - Pandora;
+- Merlim
 - aleatório;
 - persistência;
 - imagens.
@@ -641,6 +644,7 @@ Esta fase é **exclusivamente de validação**.
 
 - [ ] Harry
 - [ ] Pandora
+- [ ] Merlim
 - [ ] seleção
 - [ ] aleatório
 - [ ] persistência
