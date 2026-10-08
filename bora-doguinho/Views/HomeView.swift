@@ -4,8 +4,10 @@ import Combine
 @MainActor
 final class HomeViewModel: ObservableObject {
     @Published var activePetImageName: String?
+    @Published var partnerProfile: UserPublicProfile?
     
     private let petService = PetService()
+    private let connectionService = ConnectionService()
     
     func loadActivePet(for user: AppUser) async {
         do {
@@ -23,6 +25,19 @@ final class HomeViewModel: ObservableObject {
             }
         } catch {
             print("Erro ao carregar pet ativo: \(error.localizedDescription)")
+        }
+    }
+
+    func loadPartner(for user: AppUser) async {
+        guard let partnerId = user.connectedUserId else {
+            self.partnerProfile = nil
+            return
+        }
+        
+        do {
+            self.partnerProfile = try await connectionService.fetchPublicProfile(id: partnerId)
+        } catch {
+            print("Erro ao carregar perfil do parceiro: \(error.localizedDescription)")
         }
     }
 }
@@ -92,19 +107,30 @@ struct HomeView: View {
 
                     Spacer()
 
-                    // Casal
+                    // Casal / Usuário
                     HStack(spacing: 8) {
-                        avatar(initials: "L", color: .pink)
-                        Text("Laura")
-                            .font(.headline)
+                        if let user = session.currentUser {
+                            let firstName = user.name.components(separatedBy: " ").first ?? ""
+                            avatar(initials: String(firstName.prefix(1)).uppercased(), color: .pink)
+                            Text(firstName)
+                                .font(.headline)
 
-                        Image(systemName: "link")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                            if user.connectedUserId != nil {
+                                Image(systemName: "link")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
 
-                        avatar(initials: "R", color: .purple)
-                        Text("Rennan")
-                            .font(.headline)
+                                if let partner = viewModel.partnerProfile {
+                                    let partnerFirstName = partner.name.components(separatedBy: " ").first ?? ""
+                                    avatar(initials: String(partnerFirstName.prefix(1)).uppercased(), color: .purple)
+                                    Text(partnerFirstName)
+                                        .font(.headline)
+                                } else {
+                                    ProgressView()
+                                        .frame(width: 24, height: 24)
+                                }
+                            }
+                        }
                     }
 
                     Spacer()
@@ -213,6 +239,7 @@ struct HomeView: View {
             if let user = session.currentUser {
                 Task {
                     await viewModel.loadActivePet(for: user)
+                    await viewModel.loadPartner(for: user)
                 }
             }
         }
@@ -220,6 +247,7 @@ struct HomeView: View {
             if let user = newValue {
                 Task {
                     await viewModel.loadActivePet(for: user)
+                    await viewModel.loadPartner(for: user)
                 }
             }
         }

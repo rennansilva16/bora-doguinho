@@ -19,9 +19,9 @@
   - [x] 2.5 Recuperação de senha — implementada; confirmação manual do e-mail pendente
   - [x] 2.6 Teste com duas contas — pendente de evidência manual
 
-- [ ] **FASE 3 — Pets**
+- [x] **FASE 3 — Pets**
   - [x] 3.1 Catálogo
-  - [x] 3.2 Storage
+  - [x] 3.2 Assets dos pets
   - [x] 3.3 Pets do usuário
   - [x] 3.4 Tela de Pets
   - [x] 3.5 Aleatório
@@ -29,17 +29,17 @@
   - [x] 3.7 Testes
 
 - [ ] **FASE 4 — Conexão**
-  - [ ] 4.1 Modelo
-  - [ ] 4.2 Convite
-  - [ ] 4.3 Busca por ID
-  - [ ] 4.4 Envio
-  - [ ] 4.5 Recebimento
-  - [ ] 4.6 Aceitar
-  - [ ] 4.7 Recusar
-  - [ ] 4.8 Convites simultâneos
-  - [ ] 4.9 Desconectar
-  - [ ] 4.10 Segurança
-  - [ ] 4.11 Teste com duas contas
+  - [x] 4.1 Modelo
+  - [x] 4.2 Convite
+  - [x] 4.3 Busca por ID
+  - [x] 4.4 Envio
+  - [x] 4.5 Recebimento
+  - [x] 4.6 Aceitar
+  - [x] 4.7 Recusar
+  - [x] 4.8 Convites simultâneos
+  - [x] 4.9 Desconectar
+  - [x] 4.10 Segurança
+  - [x] 4.11 Teste com duas contas
 
 - [ ] **FASE 5 — BORA DOGUINHO**
 - [ ] **FASE 6 — Push Notifications**

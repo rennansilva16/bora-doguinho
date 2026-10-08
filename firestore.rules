@@ -2,6 +2,7 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+
     function isSignedIn() {
       return request.auth != null;
     }
@@ -10,14 +11,18 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
+    // ──────────────────────────────────────────────
+    // Catálogo global de pets (Fase 3)
+    // ──────────────────────────────────────────────
     match /pets/{petId} {
       allow read: if isSignedIn();
       allow write: if false;
     }
 
+    // ──────────────────────────────────────────────
+    // Perfis privados (Fase 2 + 3)
+    // ──────────────────────────────────────────────
     match /users/{userId} {
-      // Phase 2 creates the profile in the same batch as the initial pets.
-      // Only the authenticated owner can create and read their own profile.
       allow create: if isOwner(userId)
         && request.resource.data.keys().hasOnly([
           'id', 'name', 'email', 'avatarURL', 'activePetId',
@@ -38,13 +43,70 @@ service cloud.firestore {
 
       allow read: if isOwner(userId);
 
+      // Atualização de seleção de pet (Fase 3)
       allow update: if isOwner(userId)
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['activePetId', 'petSelectionMode'])
         && request.resource.data.petSelectionMode in ['specific', 'random']
         && request.resource.data.activePetId is string;
 
+      // Atualização de connectedUserId para CONECTAR (Fase 4)
+      // Permitida somente se existir um connections/ ativo com ambos os UIDs.
+      // getAfter() cobre o caso do recipient que cria o connections/ no mesmo batch.
+      // exists() cobre o caso do sender que atualiza após o batch já ter committed.
+      allow update: if isOwner(userId)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['connectedUserId'])
+        && request.resource.data.connectedUserId is string
+        && request.resource.data.connectedUserId != userId
+        && (
+          // Recipient: connections/ está sendo criado no mesmo batch (usa getAfter)
+          (
+            getAfter(/databases/$(database)/documents/connections/$(userId + '_' + request.resource.data.connectedUserId)).data.status == 'active'
+            && userId in getAfter(/databases/$(database)/documents/connections/$(userId + '_' + request.resource.data.connectedUserId)).data.userIds
+          ) ||
+          (
+            getAfter(/databases/$(database)/documents/connections/$(request.resource.data.connectedUserId + '_' + userId)).data.status == 'active'
+            && userId in getAfter(/databases/$(database)/documents/connections/$(request.resource.data.connectedUserId + '_' + userId)).data.userIds
+          ) ||
+          // Sender: connections/ já existe (usa exists)
+          (
+            exists(/databases/$(database)/documents/connections/$(userId + '_' + request.resource.data.connectedUserId))
+            && get(/databases/$(database)/documents/connections/$(userId + '_' + request.resource.data.connectedUserId)).data.status == 'active'
+          ) ||
+          (
+            exists(/databases/$(database)/documents/connections/$(request.resource.data.connectedUserId + '_' + userId))
+            && get(/databases/$(database)/documents/connections/$(request.resource.data.connectedUserId + '_' + userId)).data.status == 'active'
+          )
+        );
+
+      // Atualização de connectedUserId para DESCONECTAR (Fase 4)
+      // Permitida somente se o connections/ estiver sendo marcado como inactive no mesmo batch,
+      // ou se já estiver inactive (parceiro desconectou primeiro).
+      allow update: if isOwner(userId)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['connectedUserId'])
+        && request.resource.data.connectedUserId == null
+        && resource.data.connectedUserId != null
+        && (
+          // Initiator: connections/ está sendo desativado no mesmo batch
+          (
+            getAfter(/databases/$(database)/documents/connections/$(userId + '_' + resource.data.connectedUserId)).data.status == 'inactive'
+          ) ||
+          (
+            getAfter(/databases/$(database)/documents/connections/$(resource.data.connectedUserId + '_' + userId)).data.status == 'inactive'
+          ) ||
+          // Parceiro: connections/ já está inactive
+          (
+            exists(/databases/$(database)/documents/connections/$(userId + '_' + resource.data.connectedUserId))
+            && get(/databases/$(database)/documents/connections/$(userId + '_' + resource.data.connectedUserId)).data.status == 'inactive'
+          ) ||
+          (
+            exists(/databases/$(database)/documents/connections/$(resource.data.connectedUserId + '_' + userId))
+            && get(/databases/$(database)/documents/connections/$(resource.data.connectedUserId + '_' + userId)).data.status == 'inactive'
+          )
+        );
+
       allow delete: if false;
 
+      // Pets do usuário (Fase 3)
       match /pets/{petId} {
         allow create: if isOwner(userId)
           && (petId == 'harry' || petId == 'pandora' || petId == 'merlim')
@@ -58,5 +120,107 @@ service cloud.firestore {
         allow update, delete: if false;
       }
     }
+
+    // ──────────────────────────────────────────────
+    // Perfis públicos (Fase 4)
+    // ──────────────────────────────────────────────
+    match /userPublicProfiles/{uid} {
+      // Qualquer autenticado pode ler (necessário para busca por ID)
+      allow read: if isSignedIn();
+
+      // Somente o próprio usuário cria, com os campos mínimos necessários
+      allow create: if isOwner(uid)
+        && request.resource.data.keys().hasOnly(['id', 'name', 'avatarURL'])
+        && request.resource.data.keys().hasAll(['id', 'name', 'avatarURL'])
+        && request.resource.data.id == uid
+        && request.resource.data.name is string
+        && request.resource.data.avatarURL is string;
+
+      // Imutável no MVP (avatar e nome serão editáveis na Fase 9)
+      allow update, delete: if false;
+    }
+
+    // ──────────────────────────────────────────────
+    // Convites de conexão (Fase 4)
+    // ──────────────────────────────────────────────
+    match /connectionRequests/{requestId} {
+      // Somente sender ou recipient podem ler
+      allow read: if isSignedIn()
+        && (resource.data.senderId == request.auth.uid
+            || resource.data.recipientId == request.auth.uid);
+
+      // Somente o sender cria, com status inicial pending
+      allow create: if isSignedIn()
+        && request.resource.data.senderId == request.auth.uid
+        && request.resource.data.recipientId != request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.keys().hasAll(['id', 'senderId', 'recipientId', 'status', 'createdAt'])
+        && request.resource.data.keys().hasOnly(['id', 'senderId', 'recipientId', 'status', 'createdAt'])
+        && request.resource.data.createdAt is timestamp;
+
+      // Somente o recipient pode alterar status para 'accepted' ou 'closed'
+      allow update: if isSignedIn()
+        && resource.data.recipientId == request.auth.uid
+        && resource.data.status == 'pending'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+        && request.resource.data.status in ['accepted', 'declined', 'closed'];
+
+      // Sender pode fechar (closed) convite reverso após aceitar outro
+      // (cobre o caso de convites simultâneos A→B e B→A)
+      allow update: if isSignedIn()
+        && resource.data.senderId == request.auth.uid
+        && resource.data.status == 'pending'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+        && request.resource.data.status == 'closed';
+
+      allow delete: if false;
+    }
+
+    // ──────────────────────────────────────────────
+    // Conexões ativas (Fase 4)
+    // ──────────────────────────────────────────────
+    match /connections/{connectionId} {
+      // Somente os dois usuários da conexão podem ler
+      allow read: if isSignedIn()
+        && request.auth.uid in resource.data.userIds;
+
+      // Criação: somente o recipient de um convite que foi aceito no mesmo batch
+      // getAfter() garante que o convite foi marcado como 'accepted' nesta mesma operação
+      allow create: if isSignedIn()
+        && request.auth.uid in request.resource.data.userIds
+        && request.resource.data.userIds.size() == 2
+        && request.resource.data.status == 'active'
+        && request.resource.data.requestId is string
+        && request.resource.data.keys().hasAll(['id', 'userIds', 'status', 'requestId', 'createdAt'])
+        && request.resource.data.keys().hasOnly(['id', 'userIds', 'status', 'requestId', 'createdAt'])
+        && getAfter(/databases/$(database)/documents/connectionRequests/$(request.resource.data.requestId)).data.status == 'accepted'
+        && getAfter(/databases/$(database)/documents/connectionRequests/$(request.resource.data.requestId)).data.recipientId == request.auth.uid
+        && getAfter(/databases/$(database)/documents/connectionRequests/$(request.resource.data.requestId)).data.senderId in request.resource.data.userIds
+        && getAfter(/databases/$(database)/documents/connectionRequests/$(request.resource.data.requestId)).data.recipientId in request.resource.data.userIds;
+
+      // Somente um dos dois membros pode desativar (active → inactive)
+      // OU reconectar usando um novo convite aceito (inactive → active)
+      allow update: if isSignedIn()
+        && request.auth.uid in resource.data.userIds
+        && (
+          (
+            resource.data.status == 'active'
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+            && request.resource.data.status == 'inactive'
+          ) || (
+            resource.data.status == 'inactive'
+            && request.resource.data.status == 'active'
+            && request.resource.data.requestId is string
+            && request.resource.data.keys().hasOnly(['id', 'userIds', 'status', 'requestId', 'createdAt'])
+            && getAfter(/databases/$(database)/documents/connectionRequests/$(request.resource.data.requestId)).data.status == 'accepted'
+            && getAfter(/databases/$(database)/documents/connectionRequests/$(request.resource.data.requestId)).data.recipientId == request.auth.uid
+            && getAfter(/databases/$(database)/documents/connectionRequests/$(request.resource.data.requestId)).data.senderId in request.resource.data.userIds
+            && getAfter(/databases/$(database)/documents/connectionRequests/$(request.resource.data.requestId)).data.recipientId in request.resource.data.userIds
+          )
+        );
+
+      allow delete: if false;
+    }
+
   }
 }

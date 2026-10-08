@@ -59,7 +59,6 @@ Firebase:
 
 - Firebase Authentication
 - Cloud Firestore
-- Firebase Storage
 - Firebase Cloud Messaging
 
 ## Notificações
@@ -286,10 +285,16 @@ Documento:
 ```text
 id
 name
-imageURL
+imageName
 createdAt
 ```
+`imageName` corresponde ao nome do asset existente no aplicativo.
 
+Exemplo:
+
+harry → Image("harry")
+pandora → Image("pandora")
+merlim → Image("merlim")
 O usuário possui referências aos pets disponíveis para sua conta.
 
 Isso permite futuramente adicionar:
@@ -302,18 +307,28 @@ Isso permite futuramente adicionar:
 
 # 13. Imagens dos pets
 
-As imagens serão armazenadas no:
+As imagens dos pets serão armazenadas como assets locais do aplicativo,
+dentro do Assets.xcassets.
 
-**Firebase Storage**
+Os pets do MVP são:
 
-O Firestore armazenará a referência/URL da imagem.
+- Harry → `harry`
+- Pandora → `pandora`
+- Merlim → `merlim`
 
-Motivo:
+O Firestore armazenará apenas o nome do asset através do campo `imageName`.
 
-- permite atualizar imagens sem necessariamente atualizar o aplicativo;
-- facilita adicionar novos pets;
-- separa dados de arquivos;
-- prepara o sistema para futuras expansões.
+Exemplo:
+
+```text
+pets/harry
+
+id: harry
+name: Harry
+imageName: harry
+createdAt: ...
+```
+
 
 ---
 
@@ -939,28 +954,22 @@ Usuário não pode manipular arbitrariamente o histórico de atividade.
 
 # 46. Firebase Storage
 
-Estrutura conceitual:
+O Firebase Storage não faz parte do MVP atual.
 
-```text
-pets/
-    harry/
-    pandora/
+As imagens dos pets são armazenadas localmente no aplicativo,
+através do Assets.xcassets.
 
-users/
-    {userId}/
-        avatar
-```
+O Firebase Storage poderá ser utilizado futuramente para:
 
-No futuro:
+- imagens dinâmicas de pets;
+- avatares;
+- roupas;
+- acessórios;
+- arquivos relacionados à loja;
+- outros recursos que precisem ser atualizados sem uma nova versão do aplicativo.
 
-```text
-pets/
-    ...
-clothes/
-    ...
-shop/
-    ...
-```
+Essa infraestrutura não deve ser implementada enquanto não houver
+necessidade real no produto.
 
 ---
 
@@ -1038,11 +1047,9 @@ Em vez de:
 ```text
 HomeView
     ↓
-Firestore
+DoguinhoRequestService
     ↓
-Storage
-    ↓
-FCM
+Firebase
 ```
 
 Isso mantém o projeto mais organizado e facilita testes e manutenção.
@@ -1095,6 +1102,7 @@ Os detalhes técnicos devem ficar disponíveis para logs/desenvolvimento.
 ✅ Convites
 ✅ Harry
 ✅ Pandora
+✅ Merlim
 ✅ Seleção de pet
 ✅ Aleatório
 ✅ Home
@@ -1172,13 +1180,15 @@ A implementação deverá acontecer incrementalmente.
 ## Fase 3 — Pets
 
 - Firestore;
-- Storage;
+- catálogo global de pets;
+- assets locais;
 - Harry;
 - Pandora;
+- Merlim;
 - seleção;
 - aleatório.
 
-**Critério:** usuário consegue escolher o doguinho que utilizará.
+**Critério:** usuário consegue visualizar e escolher o doguinho que utilizará.
 
 ---
 

@@ -47,6 +47,14 @@ final class UserService {
             ], forDocument: userReference.collection("pets").document(pet.key))
         }
 
+        // Perfil público: dados mínimos legíveis por qualquer autenticado (necessário para busca na Fase 4)
+        let publicProfileReference = database.collection("userPublicProfiles").document(id)
+        batch.setData([
+            "id": id,
+            "name": name,
+            "avatarURL": ""
+        ], forDocument: publicProfileReference)
+
         try await batch.commit()
         return user
     }

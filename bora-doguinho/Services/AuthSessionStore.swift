@@ -105,6 +105,15 @@ final class AuthSessionStore: ObservableObject {
         currentUser = user
     }
 
+    /// Atualiza o connectedUserId localmente após operação bem-sucedida no Firestore.
+    /// Chame este método após aceitar um convite, após o sender detectar a conexão via listener,
+    /// ou após desconectar — para manter a UI em sincronia sem re-fetch do perfil completo.
+    func updateConnection(connectedUserId: String?) {
+        guard var user = currentUser else { return }
+        user.connectedUserId = connectedUserId
+        currentUser = user
+    }
+
     func signOut() {
         do {
             try Auth.auth().signOut()

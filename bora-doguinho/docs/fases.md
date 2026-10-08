@@ -230,13 +230,13 @@ pets/
 |__ marlim
 ```
 
-### 3.2 — Firebase Storage
+### 3.2 — Assets dos pets
 
 Implementar:
 
-- armazenamento das imagens;
-- URLs;
-- carregamento remoto.
+- imagens dos pets em Assets.xcassets;
+- associação entre pet e asset através de imageName;
+- carregamento local das imagens.
 
 ### 3.3 — Pets do usuário
 
@@ -742,7 +742,7 @@ FASE 2  → Firebase + Autenticação
 
 FASE 3  → Pets
           ├─ 3.1 Catálogo
-          ├─ 3.2 Storage
+          ├─ 3.2 Assets dos pets
           ├─ 3.3 Pets do usuário
           ├─ 3.4 Tela
           ├─ 3.5 Aleatório
