@@ -42,6 +42,19 @@
   - [x] 4.11 Teste com duas contas
 
 - [ ] **FASE 5 — BORA DOGUINHO**
+  - [ ] 5.1 Modelo `DoguinhoRequest`
+  - [ ] 5.2 — `DoguinhoRequestService`
+  - [ ] 5.3 — Criar pedido
+  - [ ] 5.4 — Estado "levando"
+  - [ ] 5.5 — Receber pedido
+  - [ ] 5.6 — Modal real
+  - [ ] 5.7 — Resposta "Sim!"
+  - [ ] 5.8 — Resposta "Daqui a 15 minutos"
+  - [ ] 5.9 — Resposta "Agora não posso"
+  - [ ] 5.10 — Expiração após 15 minutos
+  - [ ] 5.11 — Bloqueio de duplicidade
+  - [ ] 5.12 — Retorno do doguinho
+  - [ ] 5.13 — Teste completo
 - [ ] **FASE 6 — Push Notifications**
 - [ ] **FASE 7 — Central de Notificações**
 - [ ] **FASE 8 — Indicador Semanal**
