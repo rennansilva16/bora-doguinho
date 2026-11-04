@@ -46,7 +46,7 @@
   - [x] 5.2 — `DoguinhoRequestService` — Issue [#3](https://github.com/rennansilva16/bora-doguinho/issues/3) implementada localmente
   - [x] 5.3 — Criar pedido — Issue [#4](https://github.com/rennansilva16/bora-doguinho/issues/4) concluída
   - [x] 5.4 — Estado "levando" — Issue [#5](https://github.com/rennansilva16/bora-doguinho/issues/5) concluída
-  - [ ] 5.5 — Receber pedido
+  - [x] 5.5 — Receber pedido — Issue [#6](https://github.com/rennansilva16/bora-doguinho/issues/6) concluída
   - [ ] 5.6 — Modal real
   - [ ] 5.7 — Resposta "Sim!"
   - [ ] 5.8 — Resposta "Daqui a 15 minutos"
@@ -75,7 +75,7 @@
 
 **FASE 5 — BORA DOGUINHO**
 
-**Próxima tarefa:** Issue [#6](https://github.com/rennansilva16/bora-doguinho/issues/6) — detectar pedidos recebidos e preparar a modal de resposta.
+**Próxima tarefa:** Issue [#7](https://github.com/rennansilva16/bora-doguinho/issues/7) — conectar a modal ao pedido real.
 
 ### 🏁 Marco do projeto
 

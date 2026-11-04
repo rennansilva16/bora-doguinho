@@ -7,6 +7,7 @@ final class HomeViewModel: ObservableObject {
     @Published var activePetImageName: String?
     @Published private(set) var activePetId: String?
     @Published private(set) var sentRequest: DoguinhoRequest?
+    @Published private(set) var receivedRequest: DoguinhoRequest?
     @Published var partnerProfile: UserPublicProfile?
     @Published private(set) var isSendingRequest = false
     @Published var requestErrorMessage: String?
@@ -15,9 +16,11 @@ final class HomeViewModel: ObservableObject {
     private let connectionService = ConnectionService()
     private let doguinhoRequestService = DoguinhoRequestService()
     private var sentRequestListener: ListenerRegistration?
+    private var receivedRequestListener: ListenerRegistration?
 
     deinit {
         sentRequestListener?.remove()
+        receivedRequestListener?.remove()
     }
     
     func loadActivePet(for user: AppUser) async {
@@ -53,6 +56,9 @@ final class HomeViewModel: ObservableObject {
     @Published private var petImageNamesById: [String: String] = [:]
 
     var displayedPetImageName: String? {
+        if let receivedRequest {
+            return petImageNamesById[receivedRequest.senderPetId]
+        }
         if let sentRequest {
             return petImageNamesById[sentRequest.senderPetId]
         }
@@ -79,10 +85,32 @@ final class HomeViewModel: ObservableObject {
         }
     }
 
+    func startObservingReceivedRequest(for userId: String) {
+        receivedRequestListener?.remove()
+
+        receivedRequestListener = doguinhoRequestService.listenForReceivedRequest(
+            receiverUserId: userId
+        ) { [weak self] result in
+            Task { @MainActor in
+                switch result {
+                case .success(let request):
+                    self?.receivedRequest = request
+                case .failure(let error):
+                    // Uma falha transitória não transforma o último pedido
+                    // observado em respondido ou expirado na interface.
+                    print("Erro ao observar pedido recebido: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+
     func stopObservingSentRequest() {
         sentRequestListener?.remove()
+        receivedRequestListener?.remove()
         sentRequestListener = nil
+        receivedRequestListener = nil
         sentRequest = nil
+        receivedRequest = nil
     }
 
     func loadPartner(for user: AppUser) async {
@@ -171,6 +199,10 @@ struct HomeView: View {
     }
 
     private var displayedVisualState: HomeVisualState {
+        if viewModel.receivedRequest != nil {
+            return .received
+        }
+
         guard let request = viewModel.sentRequest else { return visualState }
 
         switch request.status {
@@ -294,14 +326,6 @@ struct HomeView: View {
                     .padding(.horizontal, 32)
                     .padding(.top, 8)
 
-                if displayedVisualState == .received {
-                    Button("Responder ao convite") {
-                        isShowingRequestModal = true
-                    }
-                    .buttonStyle(.bordered)
-                    .padding(.top, 8)
-                }
-
                 // Botão principal
                 Button {
                     guard let user = session.currentUser else { return }
@@ -383,6 +407,7 @@ struct HomeView: View {
                     await viewModel.loadActivePet(for: user)
                     await viewModel.loadPartner(for: user)
                     viewModel.startObservingSentRequest(for: user.id)
+                    viewModel.startObservingReceivedRequest(for: user.id)
                 }
             }
         }
@@ -392,6 +417,7 @@ struct HomeView: View {
                     await viewModel.loadActivePet(for: user)
                     await viewModel.loadPartner(for: user)
                     viewModel.startObservingSentRequest(for: user.id)
+                    viewModel.startObservingReceivedRequest(for: user.id)
                 }
             } else {
                 viewModel.stopObservingSentRequest()
