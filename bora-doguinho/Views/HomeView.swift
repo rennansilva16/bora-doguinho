@@ -157,6 +157,14 @@ final class HomeViewModel: ObservableObject {
             return false
         }
     }
+
+    func respond(to request: DoguinhoRequest, with response: DoguinhoRequestStatus, userId: String) async throws {
+        try await doguinhoRequestService.respond(
+            to: request.id,
+            with: response,
+            receiverUserId: userId
+        )
+    }
 }
 
 enum HomeVisualState {
@@ -193,6 +201,7 @@ struct HomeView: View {
     @State private var isShowingMenu = false
     @State private var visualState: HomeVisualState
     @State private var isShowingRequestModal = false
+    @State private var presentedRequestIds: Set<String> = []
 
     init(visualState: HomeVisualState = .available) {
         _visualState = State(initialValue: visualState)
@@ -381,9 +390,18 @@ struct HomeView: View {
         }
         .animation(.easeInOut(duration: 0.25), value: isShowingMenu)
         .sheet(isPresented: $isShowingRequestModal) {
-            DoguinhoRequestModal { _ in
-                visualState = .returning
-                isShowingRequestModal = false
+            if let request = viewModel.receivedRequest,
+               let user = session.currentUser {
+                DoguinhoRequestModal(
+                    senderName: viewModel.partnerProfile?.name ?? "Seu parceiro",
+                    petImageName: viewModel.displayedPetImageName,
+                    onResponse: { response in
+                        try await viewModel.respond(to: request, with: response, userId: user.id)
+                    },
+                    onSuccess: {
+                        isShowingRequestModal = false
+                    }
+                )
             }
         }
         .alert(
@@ -422,6 +440,11 @@ struct HomeView: View {
             } else {
                 viewModel.stopObservingSentRequest()
             }
+        }
+        .onChange(of: viewModel.receivedRequest?.id) { _, requestId in
+            guard let requestId, !presentedRequestIds.contains(requestId) else { return }
+            presentedRequestIds.insert(requestId)
+            isShowingRequestModal = true
         }
         .onDisappear {
             viewModel.stopObservingSentRequest()

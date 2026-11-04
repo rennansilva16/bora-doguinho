@@ -47,7 +47,7 @@
   - [x] 5.3 — Criar pedido — Issue [#4](https://github.com/rennansilva16/bora-doguinho/issues/4) concluída
   - [x] 5.4 — Estado "levando" — Issue [#5](https://github.com/rennansilva16/bora-doguinho/issues/5) concluída
   - [x] 5.5 — Receber pedido — Issue [#6](https://github.com/rennansilva16/bora-doguinho/issues/6) concluída
-  - [ ] 5.6 — Modal real
+  - [x] 5.6 — Modal real — Issue [#7](https://github.com/rennansilva16/bora-doguinho/issues/7) concluída
   - [ ] 5.7 — Resposta "Sim!"
   - [ ] 5.8 — Resposta "Daqui a 15 minutos"
   - [ ] 5.9 — Resposta "Agora não posso"
@@ -75,7 +75,7 @@
 
 **FASE 5 — BORA DOGUINHO**
 
-**Próxima tarefa:** Issue [#7](https://github.com/rennansilva16/bora-doguinho/issues/7) — conectar a modal ao pedido real.
+**Próxima tarefa:** validar as respostas específicas nas Issues #8, #9 e #10.
 
 ### 🏁 Marco do projeto
 
