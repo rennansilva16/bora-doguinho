@@ -535,7 +535,7 @@ Usuário respondeu "Agora não posso".
 
 ### `expired`
 
-14 minutos passaram sem resposta.
+15 minutos passaram sem resposta.
 
 ---
 
@@ -543,7 +543,7 @@ Usuário respondeu "Agora não posso".
 
 Cada solicitação permanece pendente durante:
 
-**14 minutos.**
+**15 minutos.**
 
 Depois disso:
 
@@ -641,7 +641,7 @@ O pedido continua ativo.
 
 Rennan pode receber a push notification e responder posteriormente.
 
-Se os 14 minutos terminarem, o pedido expira normalmente.
+Se os 15 minutos terminarem, o pedido expira normalmente.
 
 ---
 
@@ -1109,7 +1109,7 @@ Os detalhes técnicos devem ficar disponíveis para logs/desenvolvimento.
 ✅ BORA DOGUINHO
 ✅ Solicitação
 ✅ Resposta
-✅ Expiração de 14 minutos
+✅ Expiração de 15 minutos
 ✅ Push notification
 ✅ Central de notificações
 ✅ Indicador semanal

@@ -675,7 +675,7 @@ Executar testes com duas contas reais e, quando possível, dois dispositivos.
 
 1. A envia uma solicitação.
 2. B não responde.
-3. O prazo de 14 minutos termina.
+3. O prazo de 15 minutos termina.
 4. A solicitação passa para `expired`.
 5. A visualiza a mensagem de expiração.
 6. O remetente pode tentar novamente.

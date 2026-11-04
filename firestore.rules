@@ -11,6 +11,33 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
+    function hasActiveConnection(userId, connectedUserId) {
+      return get(/databases/$(database)/documents/users/$(userId)).data.connectedUserId == connectedUserId
+        && get(/databases/$(database)/documents/users/$(connectedUserId)).data.connectedUserId == userId
+        && (
+          (
+            exists(/databases/$(database)/documents/connections/$(userId + '_' + connectedUserId))
+            && get(/databases/$(database)/documents/connections/$(userId + '_' + connectedUserId)).data.status == 'active'
+            && userId in get(/databases/$(database)/documents/connections/$(userId + '_' + connectedUserId)).data.userIds
+            && connectedUserId in get(/databases/$(database)/documents/connections/$(userId + '_' + connectedUserId)).data.userIds
+          ) || (
+            exists(/databases/$(database)/documents/connections/$(connectedUserId + '_' + userId))
+            && get(/databases/$(database)/documents/connections/$(connectedUserId + '_' + userId)).data.status == 'active'
+            && userId in get(/databases/$(database)/documents/connections/$(connectedUserId + '_' + userId)).data.userIds
+            && connectedUserId in get(/databases/$(database)/documents/connections/$(connectedUserId + '_' + userId)).data.userIds
+          )
+        );
+    }
+
+    function previousPendingRequestIsFinished(userId) {
+      let user = get(/databases/$(database)/documents/users/$(userId));
+
+      return !user.data.keys().hasAll(['pendingDoguinhoRequestId'])
+        || !exists(/databases/$(database)/documents/doguinhoRequests/$(user.data.pendingDoguinhoRequestId))
+        || getAfter(/databases/$(database)/documents/doguinhoRequests/$(user.data.pendingDoguinhoRequestId)).data.status != 'pending'
+        || getAfter(/databases/$(database)/documents/doguinhoRequests/$(user.data.pendingDoguinhoRequestId)).data.expiresAt <= request.time;
+    }
+
     // ──────────────────────────────────────────────
     // Catálogo global de pets (Fase 3)
     // ──────────────────────────────────────────────
@@ -77,6 +104,16 @@ service cloud.firestore {
             && get(/databases/$(database)/documents/connections/$(request.resource.data.connectedUserId + '_' + userId)).data.status == 'active'
           )
         );
+
+      // Ponteiro de pedido pendente (Fase 5).
+      // Só pode apontar para um pedido que está sendo criado nesta mesma
+      // transação, pelo próprio remetente e com status pending.
+      allow update: if isOwner(userId)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['pendingDoguinhoRequestId'])
+        && request.resource.data.pendingDoguinhoRequestId is string
+        && getAfter(/databases/$(database)/documents/doguinhoRequests/$(request.resource.data.pendingDoguinhoRequestId)).data.id == request.resource.data.pendingDoguinhoRequestId
+        && getAfter(/databases/$(database)/documents/doguinhoRequests/$(request.resource.data.pendingDoguinhoRequestId)).data.senderUserId == userId
+        && getAfter(/databases/$(database)/documents/doguinhoRequests/$(request.resource.data.pendingDoguinhoRequestId)).data.status == 'pending';
 
       // Atualização de connectedUserId para DESCONECTAR (Fase 4)
       // Permitida somente se o connections/ estiver sendo marcado como inactive no mesmo batch,
@@ -218,6 +255,70 @@ service cloud.firestore {
             && getAfter(/databases/$(database)/documents/connectionRequests/$(request.resource.data.requestId)).data.recipientId in request.resource.data.userIds
           )
         );
+
+      allow delete: if false;
+    }
+
+    // ──────────────────────────────────────────────
+    // Pedidos BORA DOGUINHO (Fase 5)
+    // ──────────────────────────────────────────────
+    match /doguinhoRequests/{requestId} {
+      // O pedido é privado: somente remetente e destinatário podem consultá-lo.
+      allow read: if isSignedIn()
+        && (resource.data.senderUserId == request.auth.uid
+            || resource.data.receiverUserId == request.auth.uid);
+
+      // O remetente cria um pedido pending na mesma transação que atualiza seu
+      // ponteiro. O servidor também confere o vínculo ativo e o prazo de 15 min.
+      allow create: if isSignedIn()
+        && request.resource.data.keys().hasOnly([
+          'id', 'senderUserId', 'receiverUserId', 'senderPetId', 'status',
+          'createdAt', 'answeredAt', 'expiresAt'
+        ])
+        && request.resource.data.keys().hasAll([
+          'id', 'senderUserId', 'receiverUserId', 'senderPetId', 'status',
+          'createdAt', 'answeredAt', 'expiresAt'
+        ])
+        && request.resource.data.id == requestId
+        && request.resource.data.senderUserId == request.auth.uid
+        && request.resource.data.receiverUserId is string
+        && request.resource.data.receiverUserId != request.auth.uid
+        && request.resource.data.senderPetId is string
+        && request.resource.data.status == 'pending'
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.answeredAt == null
+        && request.resource.data.expiresAt is timestamp
+        // request.time é o relógio do servidor. A tolerância evita rejeitar
+        // aparelhos com relógio levemente adiantado ou atrasado.
+        && request.resource.data.createdAt <= request.time + duration.value(1, 'm')
+        && request.resource.data.createdAt >= request.time - duration.value(1, 'm')
+        && request.resource.data.expiresAt == request.resource.data.createdAt + duration.value(15, 'm')
+        && hasActiveConnection(
+          request.resource.data.senderUserId,
+          request.resource.data.receiverUserId
+        )
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid)/pets/$(request.resource.data.senderPetId))
+        && previousPendingRequestIsFinished(request.auth.uid)
+        && getAfter(/databases/$(database)/documents/users/$(request.auth.uid)).data.pendingDoguinhoRequestId == requestId;
+
+      // O destinatário pode registrar uma única resposta antes do vencimento.
+      allow update: if isSignedIn()
+        && resource.data.receiverUserId == request.auth.uid
+        && resource.data.status == 'pending'
+        && resource.data.expiresAt > request.time
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'answeredAt'])
+        && request.resource.data.status in ['accepted', 'delayed', 'declined']
+        && request.resource.data.answeredAt is timestamp;
+
+      // Qualquer participante pode encerrar um pedido vencido, mas somente
+      // depois do prazo e exclusivamente na transição pending -> expired.
+      allow update: if isSignedIn()
+        && (resource.data.senderUserId == request.auth.uid
+            || resource.data.receiverUserId == request.auth.uid)
+        && resource.data.status == 'pending'
+        && resource.data.expiresAt <= request.time
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+        && request.resource.data.status == 'expired';
 
       allow delete: if false;
     }

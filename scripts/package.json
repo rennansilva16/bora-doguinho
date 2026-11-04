@@ -4,7 +4,7 @@
   "description": "",
   "main": "seed_pets.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --test test/firestore.rules.test.js"
   },
   "keywords": [],
   "author": "",
@@ -12,5 +12,9 @@
   "type": "commonjs",
   "dependencies": {
     "firebase-admin": "^14.5.0"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^6.0.0",
+    "firebase": "^13.2.0"
   }
 }

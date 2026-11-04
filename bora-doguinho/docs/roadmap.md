@@ -28,7 +28,7 @@
   - [x] 3.6 Integração com Home
   - [x] 3.7 Testes
 
-- [ ] **FASE 4 — Conexão**
+- [x] **FASE 4 — Conexão**
   - [x] 4.1 Modelo
   - [x] 4.2 Convite
   - [x] 4.3 Busca por ID
@@ -42,8 +42,8 @@
   - [x] 4.11 Teste com duas contas
 
 - [ ] **FASE 5 — BORA DOGUINHO**
-  - [ ] 5.1 Modelo `DoguinhoRequest`
-  - [ ] 5.2 — `DoguinhoRequestService`
+  - [x] 5.1 Modelo `DoguinhoRequest` — Issue [#2](https://github.com/rennansilva16/bora-doguinho/issues/2) concluída
+  - [x] 5.2 — `DoguinhoRequestService` — Issue [#3](https://github.com/rennansilva16/bora-doguinho/issues/3) implementada localmente
   - [ ] 5.3 — Criar pedido
   - [ ] 5.4 — Estado "levando"
   - [ ] 5.5 — Receber pedido
@@ -67,21 +67,21 @@
 
 ### 📊 Progresso
 
-**0 / 12 fases concluídas**
+**4 / 12 fases concluídas**
 
-`░░░░░░░░░░░░░░░░░░░░ 0%`
+`███████░░░░░░░░░░░░░ 33%`
 
 ### 🎯 Fase atual
 
-**FASE 1 — Fundação e Home**
+**FASE 5 — BORA DOGUINHO**
 
-**Próxima tarefa:** concluir os testes manuais pendentes das Fases 1 e 2.
+**Próxima tarefa:** Issue [#4](https://github.com/rennansilva16/bora-doguinho/issues/4) — ligar o botão da Home à criação real do pedido e mostrar o estado persistido de envio.
 
 ### 🏁 Marco do projeto
 
 - [ ] Fundação concluída — teste em iPhone físico pendente
 - [x] Autenticação funcionando
-- [ ] Dois usuários conseguem se conectar
+- [x] Dois usuários conseguem se conectar
 - [ ] BORA DOGUINHO funcionando
 - [ ] Push funcionando
 - [ ] Central de notificações funcionando
