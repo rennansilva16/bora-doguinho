@@ -47,12 +47,12 @@ está fechada; a subissue #3 também está fechada. As subissues #4 a #14
 permanecem abertas no GitHub.
 
 O acompanhamento local e a ordem de execução estão em
-`docs/etapas/fase-05-acompanhamento.md`. A próxima subetapa é a Issue #4.
+`docs/etapas/fase-05-acompanhamento.md`. A próxima subetapa é a Issue #5.
 
 ## Próximo objetivo pequeno
 
-Conectar o botão da Home à criação real do pedido e mostrar o estado persistido
-de envio, reutilizando `DoguinhoRequestService` sem alterar as regras Firebase.
+Substituir o estado local de envio da Home pela observação persistida do pedido
+enviado, reutilizando `DoguinhoRequestService` sem alterar as regras Firebase.
 
 ## Pendências de validação da Fase 5
 

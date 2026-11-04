@@ -4,26 +4,35 @@ import Combine
 @MainActor
 final class HomeViewModel: ObservableObject {
     @Published var activePetImageName: String?
+    @Published private(set) var activePetId: String?
     @Published var partnerProfile: UserPublicProfile?
+    @Published private(set) var isSendingRequest = false
+    @Published var requestErrorMessage: String?
     
     private let petService = PetService()
     private let connectionService = ConnectionService()
+    private let doguinhoRequestService = DoguinhoRequestService()
     
     func loadActivePet(for user: AppUser) async {
         do {
             let userPets = try await petService.fetchUserPets(userId: user.id)
             let catalog = try await petService.fetchCatalog()
             
-            var chosenPetId = user.activePetId
+            var chosenPetId: String?
             
             if user.petSelectionMode == .random, !userPets.isEmpty {
-                chosenPetId = userPets.randomElement()?.id ?? "harry"
+                chosenPetId = userPets.randomElement()?.id
+            } else if userPets.contains(where: { $0.id == user.activePetId }) {
+                chosenPetId = user.activePetId
             }
             
+            activePetId = chosenPetId
+
             if let catalogItem = catalog.first(where: { $0.id == chosenPetId }) {
                 self.activePetImageName = catalogItem.imageName
             }
         } catch {
+            activePetId = nil
             print("Erro ao carregar pet ativo: \(error.localizedDescription)")
         }
     }
@@ -38,6 +47,38 @@ final class HomeViewModel: ObservableObject {
             self.partnerProfile = try await connectionService.fetchPublicProfile(id: partnerId)
         } catch {
             print("Erro ao carregar perfil do parceiro: \(error.localizedDescription)")
+        }
+    }
+
+    /// A View só apresenta o resultado; a validação e a gravação ficam no
+    /// serviço para que não possam ser contornadas por outro ponto da interface.
+    func createDoguinhoRequest(for user: AppUser) async -> Bool {
+        guard !isSendingRequest else { return false }
+
+        guard let receiverUserId = user.connectedUserId else {
+            requestErrorMessage = "Conecte-se ao seu parceiro antes de enviar uma solicitação."
+            return false
+        }
+
+        guard let activePetId else {
+            requestErrorMessage = "Escolha um doguinho disponível antes de enviar a solicitação."
+            return false
+        }
+
+        isSendingRequest = true
+        defer { isSendingRequest = false }
+
+        do {
+            _ = try await doguinhoRequestService.createRequest(
+                senderUserId: user.id,
+                receiverUserId: receiverUserId,
+                senderPetId: activePetId,
+                connectedUserId: user.connectedUserId
+            )
+            return true
+        } catch {
+            requestErrorMessage = error.localizedDescription
+            return false
         }
     }
 }
@@ -202,23 +243,49 @@ struct HomeView: View {
 
                 // Botão principal
                 Button {
-                    // Phase 1 visual-only state; Phase 5 creates the real request.
-                    if visualState == .available {
-                        visualState = .delivering
+                    guard let user = session.currentUser else { return }
+
+                    Task {
+                        if await viewModel.createDoguinhoRequest(for: user) {
+                            // A confirmação do Firestore ocorreu. A Issue #5 vai
+                            // substituir este estado inicial pelo listener persistido.
+                            visualState = .delivering
+                        }
                     }
                 } label: {
-                    Text("BORA DOGUINHO?")
-                        .font(.headline)
-                        .fontWeight(.bold)
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 52)
-                        .background(.pink)
-                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                    HStack(spacing: 8) {
+                        if viewModel.isSendingRequest {
+                            ProgressView()
+                                .tint(.white)
+                        }
+
+                        Text(viewModel.isSendingRequest ? "ENVIANDO..." : "BORA DOGUINHO?")
+                            .font(.headline)
+                            .fontWeight(.bold)
+                    }
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 52)
+                    .background(.pink)
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
                 }
                 .padding(.horizontal, 32)
-                .disabled(!visualState.isConnected || visualState == .delivering || visualState == .received)
-                .opacity((!visualState.isConnected || visualState == .delivering || visualState == .received) ? 0.55 : 1)
+                .disabled(
+                    !visualState.isConnected
+                    || session.currentUser?.connectedUserId == nil
+                    || viewModel.activePetId == nil
+                    || visualState == .delivering
+                    || visualState == .received
+                    || viewModel.isSendingRequest
+                )
+                .opacity(
+                    (!visualState.isConnected
+                    || session.currentUser?.connectedUserId == nil
+                    || viewModel.activePetId == nil
+                    || visualState == .delivering
+                    || visualState == .received
+                    || viewModel.isSendingRequest) ? 0.55 : 1
+                )
 
                 Spacer()
             }
@@ -234,6 +301,21 @@ struct HomeView: View {
                 visualState = .returning
                 isShowingRequestModal = false
             }
+        }
+        .alert(
+            "Não foi possível enviar",
+            isPresented: Binding(
+                get: { viewModel.requestErrorMessage != nil },
+                set: { isPresented in
+                    if !isPresented {
+                        viewModel.requestErrorMessage = nil
+                    }
+                }
+            )
+        ) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(viewModel.requestErrorMessage ?? "Tente novamente.")
         }
         .onAppear {
             if let user = session.currentUser {

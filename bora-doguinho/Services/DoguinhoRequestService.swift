@@ -343,6 +343,10 @@ final class DoguinhoRequestService {
 
         // 3. Preparar os documentos e o prazo
         let userRef = db.collection("users").document(senderUserId)
+        let connectionRef = db.collection("connections").document(
+            ConnectionService.connectionId(uid1: senderUserId, uid2: receiverUserId)
+        )
+        let senderPetRef = userRef.collection("pets").document(senderPetId)
         let requestRef = db.collection("doguinhoRequests").document()
 
         let now = Date()
@@ -368,6 +372,25 @@ final class DoguinhoRequestService {
 
                     guard userSnapshot.exists else {
                         throw DoguinhoRequestServiceError.notAuthorized
+                    }
+
+                    guard userSnapshot.data()?["connectedUserId"] as? String == receiverUserId else {
+                        throw DoguinhoRequestServiceError.noActiveConnection
+                    }
+
+                    let connectionSnapshot = try transaction.getDocument(connectionRef)
+                    let connectionData = connectionSnapshot.data()
+                    let connectionUserIds = connectionData?["userIds"] as? [String] ?? []
+
+                    guard connectionData?["status"] as? String == UserConnectionStatus.active.rawValue,
+                          connectionUserIds.contains(senderUserId),
+                          connectionUserIds.contains(receiverUserId) else {
+                        throw DoguinhoRequestServiceError.noActiveConnection
+                    }
+
+                    let senderPetSnapshot = try transaction.getDocument(senderPetRef)
+                    guard senderPetSnapshot.exists else {
+                        throw DoguinhoRequestServiceError.selectedPetUnavailable
                     }
 
                     let existingRequestId =
@@ -447,6 +470,7 @@ enum DoguinhoRequestServiceError: LocalizedError {
     case requestAlreadyResolved
     case requestExpired
     case invalidResponse
+    case selectedPetUnavailable
     case operationFailed
 
     var errorDescription: String? {
@@ -465,6 +489,8 @@ enum DoguinhoRequestServiceError: LocalizedError {
             return "Este pedido expirou antes da resposta."
         case .invalidResponse:
             return "Esta resposta não é válida para um pedido."
+        case .selectedPetUnavailable:
+            return "O doguinho selecionado não está disponível."
         case .operationFailed:
             return "Não foi possível concluir a operação. Tente novamente."
         }

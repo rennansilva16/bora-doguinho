@@ -12,7 +12,7 @@ em `fase-05.md`.
 | --- | --- | --- | --- |
 | 5.1 | [#2 — Modelo DoguinhoRequest](https://github.com/rennansilva16/bora-doguinho/issues/2) | Fechada | Modelo e estados existem em `Models/DoguinhoRequest.swift`. |
 | 5.2 | [#3 — Criar DoguinhoRequestService](https://github.com/rennansilva16/bora-doguinho/issues/3) | Fechada | Criação transacional, observação de pedido enviado e recebido, resposta transacional e expiração persistida. Regras publicadas, 10 testes do Emulator aprovados e compilação iOS aprovada. |
-| 5.3 | [#4 — Implementar criação do pedido](https://github.com/rennansilva16/bora-doguinho/issues/4) | Aberta | Não iniciada. |
+| 5.3 | [#4 — Implementar criação do pedido](https://github.com/rennansilva16/bora-doguinho/issues/4) | Fechada | Home cria o pedido pelo serviço após validar sessão, conexão e pet selecionado; mostra carregamento, bloqueia toques repetidos e só muda a interface após confirmação do Firestore. |
 | 5.4 | [#5 — Implementar estado "levando"](https://github.com/rennansilva16/bora-doguinho/issues/5) | Aberta | Não iniciada. |
 | 5.5 | [#6 — Detectar pedidos recebidos](https://github.com/rennansilva16/bora-doguinho/issues/6) | Aberta | Não iniciada. |
 | 5.6 | [#7 — Conectar a modal ao pedido real](https://github.com/rennansilva16/bora-doguinho/issues/7) | Aberta | Não iniciada. |
@@ -26,10 +26,8 @@ em `fase-05.md`.
 
 ## Próximo passo
 
-Trabalhar na Issue #4: integrar o botão **BORA DOGUINHO?** da Home ao método
-de criação já existente e refletir o estado persistido do pedido enviado. Essa
-integração será feita em passo separado; a interface ainda não consome os
-listeners nem os métodos de resposta da Issue #3.
+Trabalhar na Issue #5: observar o pedido enviado e derivar da persistência o
+estado **Estou levando sua solicitação!**, inclusive após reabrir o aplicativo.
 
 ## Decisão confirmada
 
