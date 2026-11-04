@@ -1,10 +1,12 @@
 import SwiftUI
 import Combine
+import FirebaseFirestore
 
 @MainActor
 final class HomeViewModel: ObservableObject {
     @Published var activePetImageName: String?
     @Published private(set) var activePetId: String?
+    @Published private(set) var sentRequest: DoguinhoRequest?
     @Published var partnerProfile: UserPublicProfile?
     @Published private(set) var isSendingRequest = false
     @Published var requestErrorMessage: String?
@@ -12,11 +14,21 @@ final class HomeViewModel: ObservableObject {
     private let petService = PetService()
     private let connectionService = ConnectionService()
     private let doguinhoRequestService = DoguinhoRequestService()
+    private var sentRequestListener: ListenerRegistration?
+
+    deinit {
+        sentRequestListener?.remove()
+    }
     
     func loadActivePet(for user: AppUser) async {
         do {
             let userPets = try await petService.fetchUserPets(userId: user.id)
             let catalog = try await petService.fetchCatalog()
+            let imageNamesByPetId = Dictionary(
+                uniqueKeysWithValues: catalog.map { ($0.id, $0.imageName) }
+            )
+
+            petImageNamesById = imageNamesByPetId
             
             var chosenPetId: String?
             
@@ -33,8 +45,44 @@ final class HomeViewModel: ObservableObject {
             }
         } catch {
             activePetId = nil
+            petImageNamesById = [:]
             print("Erro ao carregar pet ativo: \(error.localizedDescription)")
         }
+    }
+
+    @Published private var petImageNamesById: [String: String] = [:]
+
+    var displayedPetImageName: String? {
+        if let sentRequest {
+            return petImageNamesById[sentRequest.senderPetId]
+        }
+        return activePetImageName
+    }
+
+    func startObservingSentRequest(for userId: String) {
+        sentRequestListener?.remove()
+
+        sentRequestListener = doguinhoRequestService.listenForSentRequest(
+            senderUserId: userId
+        ) { [weak self] result in
+            Task { @MainActor in
+                switch result {
+                case .success(let request):
+                    self?.sentRequest = request
+                case .failure(let error):
+                    // A criação continua exibindo erros ao usuário. Para o
+                    // listener, preservar a última tela evita apagar a Home
+                    // apenas por uma falha temporária de rede.
+                    print("Erro ao observar pedido enviado: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+
+    func stopObservingSentRequest() {
+        sentRequestListener?.remove()
+        sentRequestListener = nil
+        sentRequest = nil
     }
 
     func loadPartner(for user: AppUser) async {
@@ -120,6 +168,19 @@ struct HomeView: View {
 
     init(visualState: HomeVisualState = .available) {
         _visualState = State(initialValue: visualState)
+    }
+
+    private var displayedVisualState: HomeVisualState {
+        guard let request = viewModel.sentRequest else { return visualState }
+
+        switch request.status {
+        case .pending:
+            return .delivering
+        case .expired:
+            return .expired
+        case .accepted, .delayed, .declined:
+            return .returning
+        }
     }
 
     var body: some View {
@@ -211,29 +272,29 @@ struct HomeView: View {
                 Spacer()
 
                 // Doguinho
-                if let imageName = viewModel.activePetImageName {
+                if let imageName = viewModel.displayedPetImageName {
                     Image(imageName)
                         .resizable()
                         .scaledToFit()
                         .frame(height: 280)
-                        .opacity(visualState == .noConnection ? 0.45 : 1)
+                        .opacity(displayedVisualState == .noConnection ? 0.45 : 1)
                 } else {
                     // Fallback visual enquanto carrega ou se houver erro
                     Image("harry")
                         .resizable()
                         .scaledToFit()
                         .frame(height: 280)
-                        .opacity(visualState == .noConnection ? 0.45 : 1)
+                        .opacity(displayedVisualState == .noConnection ? 0.45 : 1)
                 }
 
-                Text(visualState.message)
+                Text(displayedVisualState.message)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
                     .padding(.top, 8)
 
-                if visualState == .received {
+                if displayedVisualState == .received {
                     Button("Responder ao convite") {
                         isShowingRequestModal = true
                     }
@@ -247,9 +308,8 @@ struct HomeView: View {
 
                     Task {
                         if await viewModel.createDoguinhoRequest(for: user) {
-                            // A confirmação do Firestore ocorreu. A Issue #5 vai
-                            // substituir este estado inicial pelo listener persistido.
-                            visualState = .delivering
+                            // O listener persistido atualiza a Home após a
+                            // confirmação da transação no Firestore.
                         }
                     }
                 } label: {
@@ -271,19 +331,19 @@ struct HomeView: View {
                 }
                 .padding(.horizontal, 32)
                 .disabled(
-                    !visualState.isConnected
+                    !displayedVisualState.isConnected
                     || session.currentUser?.connectedUserId == nil
                     || viewModel.activePetId == nil
-                    || visualState == .delivering
-                    || visualState == .received
+                    || displayedVisualState == .delivering
+                    || displayedVisualState == .received
                     || viewModel.isSendingRequest
                 )
                 .opacity(
-                    (!visualState.isConnected
+                    (!displayedVisualState.isConnected
                     || session.currentUser?.connectedUserId == nil
                     || viewModel.activePetId == nil
-                    || visualState == .delivering
-                    || visualState == .received
+                    || displayedVisualState == .delivering
+                    || displayedVisualState == .received
                     || viewModel.isSendingRequest) ? 0.55 : 1
                 )
 
@@ -322,6 +382,7 @@ struct HomeView: View {
                 Task {
                     await viewModel.loadActivePet(for: user)
                     await viewModel.loadPartner(for: user)
+                    viewModel.startObservingSentRequest(for: user.id)
                 }
             }
         }
@@ -330,8 +391,14 @@ struct HomeView: View {
                 Task {
                     await viewModel.loadActivePet(for: user)
                     await viewModel.loadPartner(for: user)
+                    viewModel.startObservingSentRequest(for: user.id)
                 }
+            } else {
+                viewModel.stopObservingSentRequest()
             }
+        }
+        .onDisappear {
+            viewModel.stopObservingSentRequest()
         }
     }
 

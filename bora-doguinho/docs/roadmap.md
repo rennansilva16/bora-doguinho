@@ -45,7 +45,7 @@
   - [x] 5.1 Modelo `DoguinhoRequest` — Issue [#2](https://github.com/rennansilva16/bora-doguinho/issues/2) concluída
   - [x] 5.2 — `DoguinhoRequestService` — Issue [#3](https://github.com/rennansilva16/bora-doguinho/issues/3) implementada localmente
   - [x] 5.3 — Criar pedido — Issue [#4](https://github.com/rennansilva16/bora-doguinho/issues/4) concluída
-  - [ ] 5.4 — Estado "levando"
+  - [x] 5.4 — Estado "levando" — Issue [#5](https://github.com/rennansilva16/bora-doguinho/issues/5) concluída
   - [ ] 5.5 — Receber pedido
   - [ ] 5.6 — Modal real
   - [ ] 5.7 — Resposta "Sim!"
@@ -75,7 +75,7 @@
 
 **FASE 5 — BORA DOGUINHO**
 
-**Próxima tarefa:** Issue [#5](https://github.com/rennansilva16/bora-doguinho/issues/5) — derivar o estado “levando” do pedido persistido no Firestore.
+**Próxima tarefa:** Issue [#6](https://github.com/rennansilva16/bora-doguinho/issues/6) — detectar pedidos recebidos e preparar a modal de resposta.
 
 ### 🏁 Marco do projeto
 
